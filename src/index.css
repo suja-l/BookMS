@@ -1,0 +1,113 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #232526, #414345);
+  background-attachment: fixed;
+  color: #e0e0e0;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+.card-action-btn {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #c1c1c1d6;
+  transition: all 0.3 ease;
+  padding: 5px 10px;
+  font-size: 1rem;
+}
+
+.card-metadata-label {
+  font-weight: 600;
+  color: #8cb5f5;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.page-title {
+  color: "#e0e0e0";
+  font-weight: 320;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  text-align: center;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 10px rgba(0, 183, 255, 0.3);
+}
+.title-separator {
+  width: 380px;
+  height: 3px;
+  background: linear-gradient(to right, transparent, #00b7ff, transparent);
+  border: 0;
+  margin: 0 auto 2.5rem auto;
+}
+.sticky-page-header {
+  top: 66px;
+  background: transparent;
+  z-index: 900;
+  /* background: rgba(10, 20, 30, 0.7); */
+  backdrop-filter: blur(0px);
+}
+.sticky-page-header.page-title {
+  margin-top: 0;
+}
+.card-3d-effect {
+  box-shadow: 0 12px 5px rgba(0, 0, 0, 0.4);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  transform-style: preserve-3d;
+}
+
+.card-3d-effect:hover {
+  transform: translateZ(50px) rotateX(1deg) rotateY(-1deg);
+
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+.button-3d-effect {
+  box-shadow: 0 0px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  transform-style: preserve-3d;
+}
+.button-3d-effect:hover {
+  transform: translateZ(50px) rotateX(1deg) rotateY(-1deg);
+}
+
+.glass-table {
+  width: 100%;
+  border-collapse: collapse; /* Important for styling */
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  overflow: hidden; /* This makes the radius clip the corners of the table */
+}
+
+.glass-table th,
+.glass-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-table th {
+  background: rgba(255, 255, 255, 0.1);
+  color: #8cb5f5; /* Using the same label color as our cards */
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.glass-table tbody tr {
+  transition: background-color 0.3s ease;
+}
+
+.glass-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.glass-table tbody tr:last-child td {
+  border-bottom: none;
+}

@@ -1,0 +1,111 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
+.glass-modal {
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.glass-modal .modal-content {
+  background: rgba(40, 40, 40, 0.7);
+  border-radius: 16px;
+  overflow: hidden;
+  color: #e2e8f0;
+  font-family: "Inter", sans-serif;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.glass-modal .modal-header,
+.glass-modal .modal-body,
+.glass-modal .modal-footer {
+  background-color: transparent;
+  border: none;
+
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.glass-modal .modal-header {
+  padding: 1.5rem 1.5rem 1rem;
+}
+.glass-modal .modal-body {
+  padding: 1rem 1.5rem;
+  display: flex;
+  gap: 2rem;
+}
+.glass-modal .modal-footer {
+  padding: 1rem 1.5rem 1.5rem;
+}
+.glass-modal .modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+.glass-modal .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+.form-group {
+  margin-bottom: 1.25rem;
+}
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+.glass-modal .form-control {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #e2e8f0;
+  padding: 0.75rem 1rem;
+  transition: all 0.3s ease-in-out;
+}
+.glass-modal .form-control::placeholder {
+  color: 64748b;
+}
+.glass-modal .form-control:focus {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  border-color: #2dd4bf;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.3);
+}
+.tag-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.tag-button {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease-in-out;
+}
+.tag-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+.tag-button.active {
+  background-color: #2dd4bf;
+  color: #0f172a;
+  border-color: #2dd4bf;
+  transform: translateY(-2px);
+  font-weight: 700;
+}
+.glass-modal .btn-secondary {
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+}
+.glass-modal .btn-primary {
+  background-color: #2dd4bf;
+  border-color: #2dd4bf;
+  color: #0f172a;
+  font-weight: 700;
+}
