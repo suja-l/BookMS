@@ -16,7 +16,7 @@ function SignIn() {
     document.body.style.backgroundColor = darkMode ? "#121212" : "#ffffff";
   }, [darkMode]);
 
-  const handleLogin = (e) => {
+  const HandleLogin = (e) => {
     e.preventDefault();
     const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
 
@@ -26,9 +26,7 @@ function SignIn() {
     if (!storedUsers.some((u) => u.email === email)) {
       setMessage("Invalid Email");
     } else if (user) {
-      setMessage(" Login successful! Welcome back, " + user.name);
       localStorage.setItem("isLogin", "true");
-
       navigate("/dashboard");
       window.location.reload();
     } else {
@@ -54,7 +52,7 @@ function SignIn() {
           justifyContent: "center",
         }}
       >
-        <form onSubmit={handleLogin}>
+        <form onSubmit={HandleLogin}>
           <h2 className="text-center mb-4">Sign In</h2>
 
           <div className="mb-3">

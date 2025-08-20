@@ -67,6 +67,9 @@ code {
   transform: translateZ(50px) rotateX(1deg) rotateY(-1deg);
 
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+
+  -webkit-backface-visibility: hidden; /* For Safari and older Chrome */
+  backface-visibility: hidden;
 }
 .button-3d-effect {
   box-shadow: 0 0px 5px rgba(0, 0, 0, 0.1);
@@ -110,4 +113,9 @@ code {
 
 .glass-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+option {
+  background-color: #414345;
+  color: white;
 }
