@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
 import CustomModal from "../../Components/Modal";
-import { InputField, Button } from "../../Components/Button"; // Assuming Button is exported from here
+import { InputField, Button } from "../../Components/Button";
 import CardList from "../../Components/cardList";
+import { Cards } from "../../Components/cards";
 
-// --- Helper Functions ---
 const timeStringToMinutes = (timeStr) => {
   if (!timeStr || typeof timeStr !== "string") return null;
   const [time, meridian] = timeStr.split(" ");
@@ -13,6 +13,12 @@ const timeStringToMinutes = (timeStr) => {
   if (meridian.toLowerCase() === "pm" && hours !== 12) hours += 12;
   if (meridian.toLowerCase() === "am" && hours === 12) hours = 0;
   return hours * 60 + minutes;
+};
+const formReset = {
+  movie: "",
+  theatre: "",
+  screen: [], // Array of { screenNo, language, type, slots: [] }
+  release_Date: "",
 };
 
 const generateTimeSlots = (startTime, endTime, interval) => {
@@ -37,25 +43,16 @@ const generateTimeSlots = (startTime, endTime, interval) => {
 export default function Showtime() {
   document.title = "Showtimes";
 
-  // --- State ---
+  const handleOpenModal = () => {
+    setFormState(formReset);
+    setShowModal(true);
+  };
   const [movies, setMovies] = useState([]);
   const [theatres, setTheatres] = useState([]);
+  // eslint-disable-next-line
   const [showtimes, setShowtimes] = useState([]);
-  const [showModal, setShowModal] = useState(true); // Keep modal open for demo
-
-  const [formstate, setFormState] = useState({
-    movie: "",
-    theatre: "",
-    screen: [], // Array of { screenNo, language, type, slots: [] }
-  });
-
-  // --- Data Fetching and Memoization ---
-  useEffect(() => {
-    setMovies(JSON.parse(localStorage.getItem("movies")) || []);
-    setTheatres(JSON.parse(localStorage.getItem("theatres")) || []);
-    setShowtimes(JSON.parse(localStorage.getItem("showtimes")) || []);
-  }, []);
-
+  const [showModal, setShowModal] = useState(false);
+  const [formstate, setFormState] = useState(formReset);
   const selectedTheatre = useMemo(
     () => theatres.find((t) => t.id === formstate.theatre),
     [formstate.theatre, theatres]
@@ -66,14 +63,27 @@ export default function Showtime() {
   );
   const allPossibleSlots = useMemo(() => generateTimeSlots(9, 23, 30), []);
 
+  const enrichedShowtimes = useMemo(() => {
+    if (!showtimes || !movies || !theatres) {
+      return [];
+    }
+    return showtimes.map((showtime) => {
+      const movieDetails = movies.find((movie) => movie.id === showtime.movie);
+      const theatreDetails = theatres.find((t) => t.id === showtime.theatre);
+      return {
+        ...showtime,
+        movie: movieDetails,
+        theatre: theatreDetails,
+      };
+    });
+  }, [showtimes, movies, theatres]);
+
   // --- Validation Logic ---
   const isSlotAvailable = (newSlot, existingSlots, movieDuration) => {
     if (!movieDuration) return false; // Can't check if we don't know the duration
     const newSlotStart = timeStringToMinutes(newSlot);
     const newSlotEnd = newSlotStart + parseInt(movieDuration, 10);
-
     if (newSlotStart === null) return false;
-
     for (const existingSlot of existingSlots) {
       const existingSlotStart = timeStringToMinutes(existingSlot);
       const existingSlotEnd = existingSlotStart + parseInt(movieDuration, 10);
@@ -87,9 +97,20 @@ export default function Showtime() {
   // --- Event Handlers ---
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormState((prev) => ({ ...prev, [name]: value }));
-  };
 
+    if (name === "theatre") {
+      // If it is, we do a special update
+      setFormState((prev) => ({
+        ...prev, // Keep the other parts of the state (like the selected movie)
+        theatre: value, // Update the theatre ID
+        screen: [], // <-- The important part: Reset the screen data
+        release_Date: "",
+      }));
+    } else {
+      const { name, value } = e.target;
+      setFormState((prev) => ({ ...prev, [name]: value }));
+    }
+  };
   const handleScreenDetailChange = (screenNum, field, value) => {
     setFormState((prev) => {
       const newScreens = [...prev.screen];
@@ -146,9 +167,109 @@ export default function Showtime() {
       return { ...prev, screen: newScreens };
     });
   };
+  const handleSaveShowtime = () => {
+    const allShowtimes = JSON.parse(localStorage.getItem("showtimes")) || [];
 
+    const existingShowtimeIndex = allShowtimes.findIndex(
+      (showtime) =>
+        showtime.movie === formstate.movie &&
+        showtime.theatre === formstate.theatre
+    );
+    if (existingShowtimeIndex > -1) {
+      const existingShowtime = allShowtimes[existingShowtimeIndex];
+      const updatedShowtime = {
+        ...existingShowtime,
+        screen: formstate.screen,
+      };
+      allShowtimes[existingShowtimeIndex] = updatedShowtime;
+      alert("Showtime upadted successfully!");
+    } else {
+      const newShowtime = {
+        id: `st_${Date.now().toString(36)}`,
+        movie: formstate.movie,
+        theatre: formstate.theatre,
+        screen: formstate.screen,
+        release_Date: formstate.release_Date,
+      };
+      allShowtimes.push(newShowtime);
+      alert("Showtime saved succesfully!");
+    }
+    localStorage.setItem("showtimes", JSON.stringify(allShowtimes));
+    setShowtimes(allShowtimes);
+    setFormState(formReset);
+    setShowModal(false);
+  };
+
+  // --- Data Fetching and Memoization ---
+  useEffect(() => {
+    setMovies(JSON.parse(localStorage.getItem("movies")) || []);
+    setTheatres(JSON.parse(localStorage.getItem("theatres")) || []);
+    setShowtimes(JSON.parse(localStorage.getItem("showtimes")) || []);
+  }, []);
   return (
     <>
+      <div className="container d-flex justify-content-end">
+        <Button color="bg-info-subtle" onClick={handleOpenModal}>
+          Add Showtime
+        </Button>
+      </div>
+      <div className="container">
+        {/* // Inside src/pages/Showtime/showtime.jsx */}
+        <div className="container">
+          <CardList
+            items={enrichedShowtimes}
+            onAddClick={() => {
+              setShowModal(formReset);
+              setShowModal(true);
+            }}
+          >
+            {(showtime, index) => (
+              <Cards
+                key={showtime.id}
+                title={showtime.movie?.movie}
+                subtitle={showtime.theatre?.theatreName}
+                imageUrl={showtime.movie?.posterURL}
+                // You can add Edit/Delete buttons here if needed
+              >
+                {/* This content gets passed as 'children' to the card's body */}
+                <div className="d-flex flex-column gap-2 text-light small">
+                  <div>
+                    <strong className="card-metadata-label d-block">
+                      Release Date
+                    </strong>
+                    {new Date(showtime.release_Date).toLocaleDateString(
+                      "en-IN",
+                      {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      }
+                    )}
+                  </div>
+                  <hr
+                    className="my-1"
+                    style={{ borderColor: "rgba(255,255,255,0.2)" }}
+                  />
+                  {showtime.screen.map((s) => (
+                    <div key={s.screenNo}>
+                      <strong className="card-metadata-label d-block">
+                        Screen {s.screenNo} ({s.language}/{s.type})
+                      </strong>
+                      <div className="d-flex flex-wrap gap-1">
+                        {s.slots.map((slot) => (
+                          <span key={slot} className="badge bg-secondary">
+                            {slot}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Cards>
+            )}
+          </CardList>
+        </div>
+      </div>
       <CustomModal show={showModal} onClose={() => setShowModal(false)}>
         <CustomModal.Header>
           <h5>Create Showtime</h5>
@@ -183,6 +304,13 @@ export default function Showtime() {
               </option>
             ))}
           </InputField>
+          <InputField
+            inputType="date"
+            name="release_Date"
+            label="Release Date:"
+            value={formstate.release_Date}
+            onChange={handleChange}
+          />
 
           {/* Screens Configuration */}
           {selectedTheatre && selectedMovie && (
@@ -300,12 +428,12 @@ export default function Showtime() {
           )}
         </CustomModal.Body>
         <CustomModal.Footer>
-          <div>
-            <Button color="btn-secondary" onClick={() => setShowModal(false)}>
-              Close
-            </Button>
-            <Button color="btn-success">Save Showtime</Button>
-          </div>
+          <Button color="btn-secondary" onClick={() => setShowModal(false)}>
+            Close
+          </Button>
+          <Button color="btn-success" onClick={() => handleSaveShowtime()}>
+            Save Showtime
+          </Button>
         </CustomModal.Footer>
       </CustomModal>
     </>

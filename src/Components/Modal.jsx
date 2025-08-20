@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import "animate.css";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -59,18 +59,14 @@ export default function CustomModal({ show, onClose, children }) {
         {show && (
           <motion.div
             id="customModal"
-            className={`modal fade show glass-modal d-block `}
+            layout
+            className={`modal fade show glass-modal`}
             tabIndex="-1"
             onClick={onClose}
             variants={revealVariants.backdrop}
             initial="backdrop_hidden"
             animate="backdrop_visible"
             exit="backdrop_hidden"
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
           >
             <motion.div
               style={{

@@ -11,6 +11,8 @@ import {
 } from "../../Components/Button";
 import CustomModal, { revealVariants } from "../../Components/Modal";
 import CardList from "../../Components/cardList";
+import { Cards } from "../../Components/cards";
+import Badges from "../../Components/badges";
 
 export default function Movies() {
   const [isEditMode, setIsEditMode] = useState(false);
@@ -129,32 +131,73 @@ export default function Movies() {
           <AnimatePresence>
             <CardList
               items={movies}
-              renderEdit={(movie, index) => (
-                <EditButton
-                  className="btn card-action-btn button-3d-effect"
-                  onClick={() => {
-                    setIsEditMode(true);
-                    setEditIndex(index);
-                    setFormState(movie);
-                    setShowModal(true);
-                  }}
-                />
-              )}
-              renderDelete={(movie) => (
-                <DeleteButton
-                  item={movie}
-                  data={movies}
-                  setData={setMovies}
-                  storageKey="movies"
-                  className="card-action-btn button-3d-effect"
-                />
-              )}
-              onAddMovieClick={() => {
+              onAddClick={() => {
                 setIsEditMode(false);
                 resetform();
                 setShowModal(true);
               }}
-            />
+            >
+              {(movie, index) => (
+                <Cards
+                  key={movie.id}
+                  title={movie.movie}
+                  imageUrl={movie.posterURL}
+                  Editbtn={
+                    <EditButton
+                      className="btn card-action-btn button-3d-effect"
+                      onClick={() => {
+                        setIsEditMode(true);
+                        setEditIndex(index);
+                        setFormState(movie);
+                        setShowModal(true);
+                      }}
+                    />
+                  }
+                  Delbtn={
+                    <DeleteButton
+                      item={movie}
+                      data={movies}
+                      setData={setMovies}
+                      storageKey="movies"
+                      className="card-action-btn button-3d-effect"
+                    />
+                  }
+                >
+                  {/* This content gets passed as 'children' to the card body */}
+                  <div className="d-flex flex-column gap-1">
+                    <div className="d-flex justify-content-between small">
+                      <span>
+                        <strong className="card-metadata-label">Genre:</strong>{" "}
+                        {movie.genre}
+                      </span>
+                      <span>
+                        <strong className="card-metadata-label">
+                          Duration:
+                        </strong>{" "}
+                        {movie.duration} mins
+                      </span>
+                    </div>
+                    <div className="mb-2">
+                      <strong className="small card-metadata-label">
+                        Languages:
+                      </strong>
+                      <br />
+                      <Badges items={movie.languages} className={"bg-info"} />
+                    </div>
+                    <div>
+                      <strong className="small card-metadata-label">
+                        Types:
+                      </strong>
+                      <br />
+                      <Badges
+                        items={movie.types}
+                        className={"bg-primary-subtle"}
+                      />
+                    </div>
+                  </div>
+                </Cards>
+              )}
+            </CardList>
           </AnimatePresence>{" "}
         </div>
       </div>
@@ -263,7 +306,7 @@ export default function Movies() {
                     />
                   </div>
                 </div>
-                <div className="col-md-5">
+                <div className="col-md-5 tag-button-group">
                   <div className="mb-3">
                     <label className="form-label">
                       <h5>Languages:</h5>
@@ -288,7 +331,7 @@ export default function Movies() {
                             onChange={handleCheckboxChange}
                           />
                           <label
-                            className="btn btn-outline-primary w-100 px-1"
+                            className="btn tag-button"
                             htmlFor={`btn-check-${lang}`}
                           >
                             {" "}
