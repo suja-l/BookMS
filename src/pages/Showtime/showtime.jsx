@@ -300,10 +300,12 @@ export default function Showtime() {
           )}
         </CustomModal.Body>
         <CustomModal.Footer>
-          <Button color="btn-secondary" onClick={() => setShowModal(false)}>
-            Close
-          </Button>
-          <Button color="btn-success">Save Showtime</Button>
+          <div>
+            <Button color="btn-secondary" onClick={() => setShowModal(false)}>
+              Close
+            </Button>
+            <Button color="btn-success">Save Showtime</Button>
+          </div>
         </CustomModal.Footer>
       </CustomModal>
     </>

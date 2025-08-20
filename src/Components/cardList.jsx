@@ -1,13 +1,13 @@
 import { AnimatePresence } from "framer-motion";
-import { Cards } from "./cards";
+// import { Cards } from "./cards";
 import { motion } from "framer-motion";
 
 export default function CardList({
   items,
   children,
-  renderEdit,
-  renderDelete,
-  onAddMovieClick,
+  // renderEdit,
+  // renderDelete,
+  onAddClick,
 }) {
   if (!items || items.length === 0) {
     return <p>No data available.</p>;
@@ -24,16 +24,7 @@ export default function CardList({
       }}
     >
       <AnimatePresence>
-        {items.map((item, index) => (
-          <Cards
-            key={item.id}
-            movie={item}
-            Editbtn={renderEdit ? renderEdit(item, index) : null}
-            Delbtn={renderDelete ? renderDelete(item, index) : null}
-          >
-            {children ? children(item, index) : null}
-          </Cards>
-        ))}
+        {items.map((item, index) => children(item, index))}
         <motion.div
           className="col-md-3 mb-4"
           key="add-movie"
@@ -46,7 +37,7 @@ export default function CardList({
           <div
             className="card h-100 w-100 shadow-lg d-flex flex-column text-light "
             style={{
-              backgroundColor: "#345969ff",
+              backgroundColor: "transparent",
               border: "2px dashed green",
               borderRadius: "10px",
               padding: "15px",
@@ -60,9 +51,7 @@ export default function CardList({
                 <button
                   type="button"
                   className="btn btn-primary px-3"
-                  // data-bs-toggle="modal"
-                  // data-bs-target="#exampleModal2"
-                  onClick={onAddMovieClick}
+                  onClick={onAddClick}
                 >
                   Add Movie
                 </button>
