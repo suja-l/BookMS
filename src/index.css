@@ -5,7 +5,22 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #232526, #414345);
+  /* background: linear-gradient(135deg, #232526, #414345); */
+
+  /* ... your other styles ... */
+  background-color: #24252b; /* A nice, soft dark color */
+  background-image: radial-gradient(
+      at top left,
+      rgba(131, 85, 217, 0.15),
+      transparent 40%
+    ),
+    radial-gradient(
+      at bottom right,
+      rgba(30, 144, 255, 0.1),
+      /* A hint of blue */ transparent 50%
+    );
+  background-attachment: fixed;
+
   background-attachment: fixed;
   color: #e0e0e0;
 }

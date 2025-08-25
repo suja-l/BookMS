@@ -11,18 +11,18 @@ export function Cards({
 }) {
   const cardStyle = {
     background: "rgba(255, 255, 255, 0.05)",
-    backdropFilter: "blur(100px)",
-    border: "1px solid rgba(255, 255, 255, 0)",
+    backdropFilter: "blur(10px)", // A slightly less intense blur
+    border: "1px solid rgba(255, 255, 255, 0.1)", // A more visible border
     borderRadius: "20px",
   };
 
   return (
     <motion.div
-      className="col-md-3 mb-4 d-flex"
+      className="col-md-3 mx-4 mb-4 d-flex"
       layout
       // ... animation props ...
       initial={{ opacity: 0, scale: 0.5, y: 20 }}
-      animate={{ opacity: 1, scale: 0.9, y: 0 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.5, y: 20 }}
       transition={{ duration: 0.6 }}
       style={{ background: "transparent", borderRadius: "20px" }}
@@ -31,17 +31,21 @@ export function Cards({
         className="card h-100 w-100 card-3d-effect d-flex flex-column text-light"
         style={cardStyle}
       >
-        <img
-          src={imageUrl || "https://via.placeholder.com/400x600?text=No+Image"}
-          className="card-img-top"
-          alt="Card visual"
-          style={{
-            height: "300px",
-            objectFit: "cover",
-            borderTopLeftRadius: "20px",
-            borderTopRightRadius: "20px",
-          }}
-        />
+        {imageUrl && (
+          <img
+            src={
+              imageUrl || "https://via.placeholder.com/400x600?text=No+Image"
+            }
+            className="card-img-top"
+            alt="Card visual"
+            style={{
+              height: "350px",
+              objectFit: "cover",
+              borderTopLeftRadius: "20px",
+              borderTopRightRadius: "20px",
+            }}
+          />
+        )}
         <div className="card-body d-flex flex-column p-3">
           {title && (
             <h6 className="card-title text-uppercase text-info fw-bold pb-2 text-center">

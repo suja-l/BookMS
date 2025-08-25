@@ -130,6 +130,8 @@ export default function Movies() {
         <div className="row">
           <AnimatePresence>
             <CardList
+              add={true}
+              page="Movie"
               items={movies}
               onAddClick={() => {
                 setIsEditMode(false);

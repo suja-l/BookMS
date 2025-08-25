@@ -17,7 +17,8 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   max-height: 90vh;
   overflow-y: auto;
-  max-width: 600px;
+  width: 80vh;
+  max-width: 900px;
 }
 .glass-modal .modal-header,
 .glass-modal .modal-body,

@@ -1,8 +1,14 @@
 import React, { useEffect, useState, useMemo } from "react";
 import CustomModal from "../../Components/Modal";
-import { InputField, Button } from "../../Components/Button";
+import {
+  InputField,
+  Button,
+  EditButton,
+  DeleteButton,
+} from "../../Components/Button";
 import CardList from "../../Components/cardList";
 import { Cards } from "../../Components/cards";
+import { useParams } from "react-router-dom";
 
 const timeStringToMinutes = (timeStr) => {
   if (!timeStr || typeof timeStr !== "string") return null;
@@ -42,13 +48,16 @@ const generateTimeSlots = (startTime, endTime, interval) => {
 
 export default function Showtime() {
   document.title = "Showtimes";
-
+  const { movieId } = useParams();
   const handleOpenModal = () => {
     setFormState(formReset);
     setShowModal(true);
   };
   const [movies, setMovies] = useState([]);
   const [theatres, setTheatres] = useState([]);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editIndex, setEditIndex] = useState(null);
+
   // eslint-disable-next-line
   const [showtimes, setShowtimes] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -67,7 +76,7 @@ export default function Showtime() {
     if (!showtimes || !movies || !theatres) {
       return [];
     }
-    return showtimes.map((showtime) => {
+    let allShowtimes = showtimes.map((showtime) => {
       const movieDetails = movies.find((movie) => movie.id === showtime.movie);
       const theatreDetails = theatres.find((t) => t.id === showtime.theatre);
       return {
@@ -76,7 +85,13 @@ export default function Showtime() {
         theatre: theatreDetails,
       };
     });
-  }, [showtimes, movies, theatres]);
+    if (movieId) {
+      return allShowtimes.filter((st) => st.movie && st.movie.id === movieId);
+    }
+
+    // If no movieId, return all showtimes (for the generic /showtime page)
+    return allShowtimes;
+  }, [showtimes, movies, theatres, movieId]);
 
   // --- Validation Logic ---
   const isSlotAvailable = (newSlot, existingSlots, movieDuration) => {
@@ -101,9 +116,9 @@ export default function Showtime() {
     if (name === "theatre") {
       // If it is, we do a special update
       setFormState((prev) => ({
-        ...prev, // Keep the other parts of the state (like the selected movie)
-        theatre: value, // Update the theatre ID
-        screen: [], // <-- The important part: Reset the screen data
+        ...prev,
+        theatre: value,
+        screen: [],
         release_Date: "",
       }));
     } else {
@@ -122,13 +137,21 @@ export default function Showtime() {
           [field]: value,
         };
       } else {
-        newScreens.push({ screenNo: screenNum, [field]: value, slots: [] });
+        newScreens.push({
+          screenNo: screenNum,
+          [field]: value,
+          slots: [],
+          price: "",
+        });
       }
       return { ...prev, screen: newScreens };
     });
   };
 
   const handleAddSlot = (screenNum, slotToAdd) => {
+    const selectEl = document.querySelector(
+      `select[name="slot-for-${screenNum}"]`
+    );
     if (!slotToAdd) {
       alert("Please select a time slot.");
       return;
@@ -138,6 +161,21 @@ export default function Showtime() {
       const screenIndex = newScreens.findIndex((s) => s.screenNo === screenNum);
 
       if (screenIndex > -1) {
+        const currentScreen = newScreens[screenIndex];
+
+        // Check if language, type, and price are filled for this screen
+        if (
+          !currentScreen.language ||
+          !currentScreen.type ||
+          !currentScreen.price
+        ) {
+          alert(
+            "Please select a language, type, and price before adding slots."
+          );
+          // We return the previous state without changing anything
+          return prev;
+        }
+
         const updatedSlots = [...newScreens[screenIndex].slots, slotToAdd].sort(
           (a, b) => timeStringToMinutes(a) - timeStringToMinutes(b)
         );
@@ -150,6 +188,9 @@ export default function Showtime() {
       // Note: In a real app, you'd handle the case where the screen object doesn't exist yet.
       return prev;
     });
+    if (selectEl) {
+      selectEl.value = "";
+    }
   };
 
   const handleRemoveSlot = (screenNum, slotToRemove) => {
@@ -169,20 +210,13 @@ export default function Showtime() {
   };
   const handleSaveShowtime = () => {
     const allShowtimes = JSON.parse(localStorage.getItem("showtimes")) || [];
-
-    const existingShowtimeIndex = allShowtimes.findIndex(
-      (showtime) =>
-        showtime.movie === formstate.movie &&
-        showtime.theatre === formstate.theatre
-    );
-    if (existingShowtimeIndex > -1) {
-      const existingShowtime = allShowtimes[existingShowtimeIndex];
+    if (isEditMode && editIndex !== null) {
       const updatedShowtime = {
-        ...existingShowtime,
-        screen: formstate.screen,
+        ...allShowtimes[editIndex],
+        ...formstate,
       };
-      allShowtimes[existingShowtimeIndex] = updatedShowtime;
-      alert("Showtime upadted successfully!");
+      allShowtimes[editIndex] = updatedShowtime;
+      alert("Showtime updated successfully");
     } else {
       const newShowtime = {
         id: `st_${Date.now().toString(36)}`,
@@ -198,6 +232,8 @@ export default function Showtime() {
     setShowtimes(allShowtimes);
     setFormState(formReset);
     setShowModal(false);
+    setEditIndex(null);
+    setIsEditMode(false);
   };
 
   // --- Data Fetching and Memoization ---
@@ -208,234 +244,307 @@ export default function Showtime() {
   }, []);
   return (
     <>
-      <div className="container d-flex justify-content-end">
-        <Button color="bg-info-subtle" onClick={handleOpenModal}>
-          Add Showtime
-        </Button>
-      </div>
-      <div className="container">
-        {/* // Inside src/pages/Showtime/showtime.jsx */}
-        <div className="container">
-          <CardList
-            items={enrichedShowtimes}
-            onAddClick={() => {
-              setShowModal(formReset);
-              setShowModal(true);
-            }}
-          >
-            {(showtime, index) => (
-              <Cards
-                key={showtime.id}
-                title={showtime.movie?.movie}
-                subtitle={showtime.theatre?.theatreName}
-                imageUrl={showtime.movie?.posterURL}
-                // You can add Edit/Delete buttons here if needed
-              >
-                {/* This content gets passed as 'children' to the card's body */}
-                <div className="d-flex flex-column gap-2 text-light small">
-                  <div>
-                    <strong className="card-metadata-label d-block">
-                      Release Date
-                    </strong>
-                    {new Date(showtime.release_Date).toLocaleDateString(
-                      "en-IN",
-                      {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      }
-                    )}
-                  </div>
-                  <hr
-                    className="my-1"
-                    style={{ borderColor: "rgba(255,255,255,0.2)" }}
-                  />
-                  {showtime.screen.map((s) => (
-                    <div key={s.screenNo}>
-                      <strong className="card-metadata-label d-block">
-                        Screen {s.screenNo} ({s.language}/{s.type})
-                      </strong>
-                      <div className="d-flex flex-wrap gap-1">
-                        {s.slots.map((slot) => (
-                          <span key={slot} className="badge bg-secondary">
-                            {slot}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Cards>
-            )}
-          </CardList>
+      <div className="container d-grid">
+        <div className="sticky-page-header">
+          <h1 className="page-title">Showtimes</h1>
+          <hr className="title-separator" />
         </div>
-      </div>
-      <CustomModal show={showModal} onClose={() => setShowModal(false)}>
-        <CustomModal.Header>
-          <h5>Create Showtime</h5>
-        </CustomModal.Header>
-        <CustomModal.Body>
-          {/* Movie and Theatre Selection */}
-          <InputField
-            as="select"
-            name="movie"
-            label="Select Movie:"
-            value={formstate.movie}
-            onChange={handleChange}
-          >
-            <option value="">-- Select a Movie --</option>
-            {movies.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.movie}
-              </option>
-            ))}
-          </InputField>
-          <InputField
-            as="select"
-            name="theatre"
-            label="Select Theatre:"
-            value={formstate.theatre}
-            onChange={handleChange}
-          >
-            <option value="">-- Select a Theatre --</option>
-            {theatres.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.theatreName}
-              </option>
-            ))}
-          </InputField>
-          <InputField
-            inputType="date"
-            name="release_Date"
-            label="Release Date:"
-            value={formstate.release_Date}
-            onChange={handleChange}
-          />
-
-          {/* Screens Configuration */}
-          {selectedTheatre && selectedMovie && (
-            <div className="d-flex flex-column gap-3 mt-3">
-              {Array.from(
-                { length: selectedTheatre.screens },
-                (_, i) => i + 1
-              ).map((screenNum) => {
-                const screenData = formstate.screen.find(
-                  (s) => s.screenNo === screenNum
-                ) || { slots: [] };
-                const availableSlots = allPossibleSlots.filter((slot) =>
-                  isSlotAvailable(
-                    slot,
-                    screenData.slots,
-                    selectedMovie.duration
-                  )
-                );
-
-                return (
-                  <div
-                    key={screenNum}
-                    className="p-3 rounded"
-                    style={{ background: "rgba(255,255,255,0.08)" }}
+        {showtimes && (
+          <div className="container">
+            <div className="container">
+              <CardList
+                add={true}
+                page="showtime"
+                items={enrichedShowtimes}
+                onAddClick={() => {
+                  setShowModal(formReset);
+                  setShowModal(true);
+                }}
+              >
+                {(showtime, index) => (
+                  <Cards
+                    key={showtime.id}
+                    title={showtime.movie?.movie}
+                    subtitle={showtime.theatre?.theatreName}
+                    imageUrl={showtime.movie?.posterURL}
+                    Editbtn={
+                      <EditButton
+                        className="btn card-action-btn button-3d-effect"
+                        onClick={() => {
+                          setEditIndex(index);
+                          setIsEditMode(true);
+                          const formCompatibleState = {
+                            ...showtime,
+                            movie: showtime.movie.id,
+                            theatre: showtime.theatre.id,
+                          };
+                          setFormState(formCompatibleState);
+                          setShowModal(true);
+                        }}
+                      />
+                    }
+                    Delbtn={
+                      <DeleteButton
+                        item={showtime}
+                        data={showtimes}
+                        setData={setShowtimes}
+                        storageKey="showtimes"
+                        className="card-action-btn button-3d-effect"
+                      />
+                    }
                   >
-                    <h6>Screen {screenNum}</h6>
-                    <div className="d-flex gap-2">
-                      {/* Language & Type Dropdowns */}
-                      <InputField
-                        as="select"
-                        name="language"
-                        value={screenData.language || ""}
-                        onChange={(e) =>
-                          handleScreenDetailChange(
-                            screenNum,
-                            "language",
-                            e.target.value
-                          )
-                        }
-                      >
-                        <option value="">Language</option>
-                        {selectedMovie.languages.map((l) => (
-                          <option key={l} value={l}>
-                            {l}
-                          </option>
-                        ))}
-                      </InputField>
-                      <InputField
-                        as="select"
-                        name="type"
-                        value={screenData.type || ""}
-                        onChange={(e) =>
-                          handleScreenDetailChange(
-                            screenNum,
-                            "type",
-                            e.target.value
-                          )
-                        }
-                      >
-                        <option value="">Type</option>
-                        {selectedMovie.types.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                      </InputField>
+                    {/* This content gets passed as 'children' to the card's body */}
+                    <div className="d-flex flex-column gap-2 text-light small">
+                      <div>
+                        <strong className="card-metadata-label d-block">
+                          Release Date
+                        </strong>
+                        {new Date(showtime.release_Date).toLocaleDateString(
+                          "en-IN",
+                          {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          }
+                        )}
+                      </div>
+                      <hr
+                        className="my-1"
+                        style={{ borderColor: "rgba(255,255,255,0.2)" }}
+                      />
+                      {showtime.screen.map((s) => (
+                        <div key={s.screenNo}>
+                          <strong className="card-metadata-label d-block">
+                            Screen {s.screenNo} ({s.language}/{s.type})-₹
+                            {s.price}
+                          </strong>
+                          <div className="d-flex flex-wrap gap-1">
+                            {s.slots.map((slot) => (
+                              <span key={slot} className="badge bg-secondary">
+                                {slot}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                  </Cards>
+                )}
+              </CardList>
+            </div>
+          </div>
+        )}
+        <CustomModal show={showModal}>
+          <CustomModal.Header>
+            <h5>Create Showtime</h5>
+          </CustomModal.Header>
+          <CustomModal.Body>
+            {/* Movie and Theatre Selection */}
+            <InputField
+              as="select"
+              name="movie"
+              label="Select Movie:"
+              value={formstate.movie}
+              onChange={handleChange}
+            >
+              <option value="">-- Select a Movie --</option>
+              {movies.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.movie}
+                </option>
+              ))}
+            </InputField>
+            <InputField
+              as="select"
+              name="theatre"
+              label="Select Theatre:"
+              value={formstate.theatre}
+              onChange={handleChange}
+            >
+              <option value="">-- Select a Theatre --</option>
+              {theatres.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.theatreName}
+                </option>
+              ))}
+            </InputField>
+            <InputField
+              inputType="date"
+              name="release_Date"
+              label="Release Date:"
+              value={formstate.release_Date}
+              onChange={handleChange}
+            />
 
-                    {/* Display and Add Slots */}
-                    <div className="mt-2">
-                      <strong>Slots:</strong>
-                      <div className="d-flex flex-wrap gap-2 mt-1">
-                        {screenData.slots.map((slot) => (
-                          <span
-                            key={slot}
-                            className="badge bg-info d-flex align-items-center gap-2"
-                          >
-                            {slot}
-                            <button
-                              type="button"
-                              className="btn-close btn-close-white"
-                              style={{ fontSize: "0.5rem" }}
-                              onClick={() => handleRemoveSlot(screenNum, slot)}
-                            ></button>
-                          </span>
-                        ))}
+            {/* Screens Configuration */}
+            {selectedTheatre && selectedMovie && (
+              <div className="row g-3 mt-3">
+                {Array.from(
+                  { length: selectedTheatre.screens },
+                  (_, i) => i + 1
+                ).map((screenNum) => {
+                  const screenData = formstate.screen.find(
+                    (s) => s.screenNo === screenNum
+                  ) || { slots: [] };
+                  const availableSlots = allPossibleSlots.filter((slot) =>
+                    isSlotAvailable(
+                      slot,
+                      screenData.slots,
+                      selectedMovie.duration
+                    )
+                  );
+
+                  return (
+                    <div key={screenNum} className="col-12 col-md-6">
+                      <div
+                        className="p-3 rounded h-100 d-flex flex-column"
+                        style={{ background: "rgba(255,255,255,0.08)" }}
+                      >
+                        <h6>Screen {screenNum}</h6>
+                        <div className="row g-2 align-items-center  mb-3">
+                          {/* Language & Type Dropdowns */}
+                          <div className="col">
+                            <InputField
+                              divClass="col"
+                              as="select"
+                              name="language"
+                              value={screenData.language || ""}
+                              onChange={(e) =>
+                                handleScreenDetailChange(
+                                  screenNum,
+                                  "language",
+                                  e.target.value
+                                )
+                              }
+                            >
+                              <option value="">Language</option>
+                              {selectedMovie.languages.map((l) => (
+                                <option key={l} value={l}>
+                                  {l}
+                                </option>
+                              ))}
+                            </InputField>{" "}
+                          </div>
+                          <div className="col">
+                            <InputField
+                              divClass="col"
+                              as="select"
+                              name="type"
+                              value={screenData.type || ""}
+                              onChange={(e) =>
+                                handleScreenDetailChange(
+                                  screenNum,
+                                  "type",
+                                  e.target.value
+                                )
+                              }
+                            >
+                              <option value="">Type</option>
+                              {selectedMovie.types.map((t) => (
+                                <option key={t} value={t}>
+                                  {t}
+                                </option>
+                              ))}
+                            </InputField>
+                          </div>
+                        </div>
+                        <div className="row g-2 align-items-center  mb-3">
+                          <strong>Slots:</strong>
+                          <div className="d-flex flex-wrap gap-2 mt-1">
+                            {screenData.slots.map((slot) => (
+                              <span
+                                key={slot}
+                                className="badge bg-info d-flex align-items-center gap-2"
+                              >
+                                {slot}
+                                <button
+                                  type="button"
+                                  className="btn-close btn-close-white"
+                                  style={{ fontSize: "0.5rem" }}
+                                  onClick={() =>
+                                    handleRemoveSlot(screenNum, slot)
+                                  }
+                                ></button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="d-flex gap-2">
+                          <div className="col-4 my-2">
+                            {/* <span className=" bg-transparent border-0 mb-2 text-light">
+                              ₹
+                            </span> */}
+
+                            <InputField
+                              divClass="d-inline"
+                              inputType="number"
+                              inputPlaceholder="Price"
+                              name="price"
+                              value={screenData.price || ""}
+                              onChange={(e) =>
+                                handleScreenDetailChange(
+                                  screenNum,
+                                  "price",
+                                  e.target.value
+                                )
+                              }
+                            ></InputField>
+                          </div>
+                          {/* Display and Add Slots */}
+                          <div className="col">
+                            <div className="d-flex gap-2 mt-2">
+                              <InputField
+                                as="select"
+                                name={`slot-for-${screenNum}`}
+                              >
+                                <option value="">
+                                  -- Select an available slot --
+                                </option>
+                                {availableSlots.map((slot) => (
+                                  <option key={slot} value={slot}>
+                                    {slot}
+                                  </option>
+                                ))}
+                              </InputField>
+                              <Button
+                                color="btn-primary"
+                                onClick={() => {
+                                  const selectEl = document.querySelector(
+                                    `select[name="slot-for-${screenNum}"]`
+                                  );
+                                  handleAddSlot(screenNum, selectEl.value);
+                                }}
+                              >
+                                Add
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="d-flex gap-2 mt-2">
-                      <InputField as="select" name={`slot-for-${screenNum}`}>
-                        <option value="">-- Select an available slot --</option>
-                        {availableSlots.map((slot) => (
-                          <option key={slot} value={slot}>
-                            {slot}
-                          </option>
-                        ))}
-                      </InputField>
-                      <Button
-                        color="btn-primary"
-                        onClick={() => {
-                          const selectEl = document.querySelector(
-                            `select[name="slot-for-${screenNum}"]`
-                          );
-                          handleAddSlot(screenNum, selectEl.value);
-                        }}
-                      >
-                        Add
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CustomModal.Body>
-        <CustomModal.Footer>
-          <Button color="btn-secondary" onClick={() => setShowModal(false)}>
-            Close
-          </Button>
-          <Button color="btn-success" onClick={() => handleSaveShowtime()}>
-            Save Showtime
-          </Button>
-        </CustomModal.Footer>
-      </CustomModal>
+                  );
+                })}
+              </div>
+            )}
+          </CustomModal.Body>
+          <CustomModal.Footer>
+            <Button
+              color="btn-secondary"
+              onClick={() => {
+                setShowModal(false);
+                setFormState(formReset);
+                setIsEditMode(false);
+                setEditIndex(null);
+              }}
+            >
+              Close
+            </Button>
+            <Button color="btn-success" onClick={() => handleSaveShowtime()}>
+              Save Showtime
+            </Button>
+          </CustomModal.Footer>
+        </CustomModal>
+      </div>
     </>
   );
 }

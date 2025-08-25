@@ -60,6 +60,14 @@ function App() {
           }
         />
         <Route
+          path="/showtime/:movieId"
+          element={
+            <ProtectedRoute>
+              <Showtime />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/database"
           element={
             <ProtectedRoute>
